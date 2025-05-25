@@ -1,37 +1,105 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
     <title>Meus Carros</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
-<body>
+
+<body class="bg-light">
+
     <!-- Barra lateral -->
     <div class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('home') }}">Página Principal</a></li>
-            <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
-            <li><a href="{{ url_for('registrar_carro') }}">Registrar Carro</a></li>
+        <div class="logo">
+            <h2>LocaUSCS</h2>
+        </div>
+        <ul class="sidebar-links">
             <li><a href="{{ url_for('perfil') }}">Perfil</a></li>
+            <li><a href="{{ url_for('registrar_carro') }}">Registrar Carro</a></li>
+            <li><a href="{{ url_for('home') }}">tela principal</a></li>
             <li><a href="{{ url_for('negociacoes') }}">Negociações</a></li>
         </ul>
     </div>
 
-    <!-- Conteúdo Principal -->
+    <!-- Conteúdo principal -->
     <div class="content">
-        <h1>Meus Carros</h1>
-        <div class="carros-lista">
-            {% for carro in meus_carros %}
-            <div class="carro">
-                <img src="{{ carro[6] }}" alt="{{ carro[1] }}" class="carro-imagem">
-                <h3>{{ carro[1] }} ({{ carro[2] }})</h3>
-                <p>Km: {{ carro[3] }} | L/100km: {{ carro[4] }} | Categoria: {{ carro[5] }}</p>
-                <a href="{{ url_for('editar_carro', carro_id=carro[0]) }}">Editar</a> |
-                <a href="{{ url_for('remover_carro', carro_id=carro[0]) }}">Remover</a>
+        <div class="container-fluid">
+            <h2 class="mb-4">Meus Carros Cadastrados</h2>
+            <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for carro in carros %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" class="card-img-top" alt="Imagem do carro" />
+                            <div class="card-body">
+                                <h5 class="card-title">{{ carro[1] }}</h5>
+                                <p class="card-text">
+                                    Ano: {{ carro[2] }}<br />
+                                    KM: {{ carro[3] }}<br />
+                                    L/KM: {{ carro[4] }}<br />
+                                    Categoria: {{ carro[5] }}
+                                </p>
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ carro[0] }}">Editar</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal de edição -->
+                    <div class="modal fade" id="editModal{{ carro[0] }}" tabindex="-1" aria-labelledby="editModalLabel{{ carro[0] }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <form action="/editar_carro/{{ carro[0] }}" method="POST">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editModalLabel{{ carro[0] }}">Editar Carro</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label for="modelo{{ carro[0] }}" class="form-label">Modelo</label>
+                                            <input type="text" class="form-control" id="modelo{{ carro[0] }}" name="modelo" value="{{ carro[1] }}" required />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="ano{{ carro[0] }}" class="form-label">Ano</label>
+                                            <input type="number" class="form-control" id="ano{{ carro[0] }}" name="ano" value="{{ carro[2] }}" required />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="km{{ carro[0] }}" class="form-label">KM</label>
+                                            <input type="number" class="form-control" id="km{{ carro[0] }}" name="km" value="{{ carro[3] }}" required />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="lkm{{ carro[0] }}" class="form-label">Litros por KM</label>
+                                            <input type="text" class="form-control" id="lkm{{ carro[0] }}" name="lkm" value="{{ carro[4] }}" required />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="categoria{{ carro[0] }}" class="form-label">Categoria</label>
+                                            <select class="form-select" id="categoria{{ carro[0] }}" name="categoria" required>
+                                                <option value="popular" {% if carro[5] == 'popular' %}selected{% endif %}>Popular</option>
+                                                <option value="luxo" {% if carro[5] == 'luxo' %}selected{% endif %}>Luxo</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="imagem{{ carro[0] }}" class="form-label">Nome do Arquivo da Imagem</label>
+                                            <input type="text" class="form-control" id="imagem{{ carro[0] }}" name="imagem" value="{{ carro[6] }}" required />
+                                            <small class="form-text text-muted">Exemplo: carro1.jpg</small>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-success">Salvar</button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>Nenhum carro cadastrado.</p>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
+
+    <!-- Bootstrap JS com Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

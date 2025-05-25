@@ -203,6 +203,32 @@ def meus_carros():
 
     return render_template('meus_carros.html', carros=carros)
 
+
+
+@app.route('/editar_carro/<int:carro_id>', methods=['POST'])
+def editar_carro(carro_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    modelo = request.form['modelo']
+    ano = request.form['ano']
+    km = request.form['km']
+    lkm = request.form['lkm']
+    categoria = request.form['categoria']
+    imagem = request.form['imagem']
+
+    conn = sqlite3.connect('locauscs.db')
+    cursor = conn.cursor()
+    cursor.execute('''UPDATE carros 
+                      SET modelo = ?, ano = ?, km = ?, lkm = ?, categoria = ?, imagem = ?
+                      WHERE id = ?''',
+                   (modelo, ano, km, lkm, categoria, imagem, carro_id))
+    conn.commit()
+    conn.close()
+
+    return redirect(url_for('meus_carros'))
+
+
 @app.route('/registrar_carro', methods=['GET', 'POST'])
 def registrar_carro():
     if 'user_id' not in session:
