@@ -5,10 +5,18 @@
     box-sizing: border-box;
 }
 
+/* Cores principais */
+:root {
+    --cor-primaria: #FF8C00;  /* Laranja */
+    --cor-secundaria: #1E90FF; /* Azul */
+    --cor-terciaria: #FFFFFF; /* Branco */
+    --cor-hover-secundaria: #1565c0;
+}
+
 /* Estilo do corpo */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+    background-color: #f9f9f9;
     color: #333;
     display: flex;
     min-height: 100vh;
@@ -17,10 +25,10 @@ body {
 /* Barra lateral */
 .sidebar {
     width: 250px;
-    background-color: #FF8C00;
+    background-color: var(--cor-primaria);
     height: 100vh;
     padding: 20px;
-    color: white;
+    color: var(--cor-terciaria);
     position: fixed;
     top: 0;
     left: 0;
@@ -44,16 +52,16 @@ body {
 }
 
 .sidebar-links a {
-    color: white;
+    color: var(--cor-terciaria);
     text-decoration: none;
     font-weight: bold;
     display: block;
     padding: 10px;
+    border-radius: 5px;
 }
 
 .sidebar-links a:hover {
-    background-color: #00796b;
-    border-radius: 5px;
+    background-color: var(--cor-hover-secundaria);
 }
 
 /* Conteúdo principal */
@@ -63,6 +71,34 @@ body {
     flex: 1;
     overflow-y: auto;
     height: 100vh;
+}
+
+/* Seção de carros com título */
+.secao-carros {
+    margin-bottom: 50px;
+}
+
+.secao-carros h2 {
+    margin-bottom: 15px;
+    color: var(--cor-primaria);
+}
+
+/* Scroll horizontal nos carros */
+.carros-container-horizontal {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+}
+
+.carros-container-horizontal::-webkit-scrollbar {
+    height: 8px;
+}
+
+.carros-container-horizontal::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
 }
 
 /* Containers dos carros */
@@ -76,13 +112,15 @@ body {
 
 /* Cada cartão de carro */
 .carro {
-    background-color: #ffffff;
+    background-color: var(--cor-terciaria);
     padding: 20px;
     width: 300px;
     border-radius: 10px;
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
     transition: transform 0.3s ease;
+    flex-shrink: 0;
+    scroll-snap-align: start;
 }
 
 .carro img {
@@ -93,7 +131,7 @@ body {
 }
 
 .carro h3 {
-    color: #FF8C00;
+    color: var(--cor-primaria);
     margin-top: 10px;
 }
 
@@ -105,7 +143,7 @@ body {
 .carro .btn-contato {
     display: inline-block;
     margin-top: 20px;
-    background-color: #00796b;
+    background-color: var(--cor-secundaria);
     color: white;
     padding: 10px 20px;
     text-decoration: none;
@@ -114,7 +152,46 @@ body {
 }
 
 .carro .btn-contato:hover {
-    background-color: #004d40;
+    background-color: var(--cor-hover-secundaria);
+}
+
+/* Popup animado */
+.popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #ff4d4d;
+    color: white;
+    padding: 25px 40px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    font-size: 18px;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.popup.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.popup i {
+    font-size: 24px;
+}
+
+.popup .close-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
 }
 
 /* Responsividade */
@@ -138,51 +215,4 @@ body {
     .carro {
         width: 90%;
     }
-}
-/* Container principal continua o mesmo */
-.content {
-    margin-left: 250px;
-    padding: 40px;
-    flex: 1;
-    overflow-y: auto;
-    height: 100vh;
-}
-
-/* Seção de carros com título */
-.secao-carros {
-    margin-bottom: 50px;
-}
-
-.secao-carros h2 {
-    margin-bottom: 15px;
-    color: #FF8C00;
-}
-
-/* Scroll horizontal nos carros */
-.carros-container-horizontal {
-    display: flex;
-    gap: 20px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 10px;
-}
-
-.carros-container-horizontal::-webkit-scrollbar {
-    height: 8px;
-}
-
-.carros-container-horizontal::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 4px;
-}
-
-.carro {
-    background-color: #ffffff;
-    padding: 20px;
-    width: 300px;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    flex-shrink: 0;
-    scroll-snap-align: start;
 }

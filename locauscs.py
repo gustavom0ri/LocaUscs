@@ -4,6 +4,10 @@ import hashlib
 import os
 import logging
 from send_email import enviar_email
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+import hashlib
+import sqlite3
+import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -83,8 +87,10 @@ def login():
         senha = request.form['senha']
         logging.debug(f"Tentativa de login com: {email}")
 
+        # Criptografar a senha
         senha_criptografada = hashlib.sha256(senha.encode()).hexdigest()
 
+        # Verificar usuário no banco de dados
         conn = sqlite3.connect('locauscs.db')
         cursor = conn.cursor()
         cursor.execute('SELECT id FROM usuarios WHERE email = ? AND senha = ?', (email, senha_criptografada))
@@ -97,33 +103,39 @@ def login():
             return redirect(url_for('home'))
         else:
             logging.warning("Usuário ou senha inválidos")
-            return "Usuário ou senha inválidos", 401
+            flash("Usuário ou senha inválidos")  # Passa a mensagem para o template
+            return redirect(url_for('login'))    # Redireciona para GET da rota, que renderiza o template
     return render_template('login.html')
 
 @app.route('/register_user', methods=['GET', 'POST'])
 def register_user():
     if request.method == 'POST':
-        nome = request.form['nome']
-        email = request.form['email']
-        senha = request.form['senha']
+        nome = request.form.get('nome', '').strip()
+        email = request.form.get('email', '').strip()
+        senha = request.form.get('senha', '').strip()
 
-        logging.debug(f"Dados recebidos para registro: {nome}, {email}")
+        # Validação básica de campos obrigatórios
+        if not nome or not email or not senha:
+            flash("Por favor, preencha todos os campos.", "error")
+            return redirect(url_for('register_user'))
 
         senha_criptografada = hashlib.sha256(senha.encode()).hexdigest()
 
         conn = sqlite3.connect('locauscs.db')
         cursor = conn.cursor()
 
+        # Verifica se o email já existe
         cursor.execute('SELECT id FROM usuarios WHERE email = ?', (email,))
         if cursor.fetchone():
-            logging.error("E-mail já cadastrado")
-            return "E-mail já cadastrado", 400
+            flash("E-mail já cadastrado. Use outro e-mail.", "error")
+            conn.close()
+            return redirect(url_for('register_user'))
 
         cursor.execute('INSERT INTO usuarios (username, email, senha) VALUES (?, ?, ?)', (nome, email, senha_criptografada))
         conn.commit()
         conn.close()
 
-        logging.info("Usuário registrado com sucesso")
+        flash("Usuário registrado com sucesso! Faça login.", "success")
         return redirect(url_for('login'))
 
     return render_template('register_user.html')

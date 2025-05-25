@@ -1,31 +1,177 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - LocaUscs</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Registro de Usuário</title>
+<style>
+  :root {
+    --cor-primaria: #ff7f00; /* laranja */
+    --cor-terciaria: #ffffff; /* branco */
+    --cor-secundaria: #333333; /* cinza escuro */
+    --cor-hover-primaria: #e67300; /* laranja mais escuro */
+    --popup-vermelho: #d9534f; /* vermelho alerta */
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+  }
+
+  .content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 20px;
+    position: relative; /* para posicionamento absoluto do popup relativo a aqui */
+  }
+
+  .form-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+    z-index: 10; /* para ficar atrás do popup */
+  }
+
+  label {
+    font-weight: bold;
+    color: var(--cor-secundaria);
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    width: 100%;
+  }
+
+  button[type="submit"] {
+    background-color: var(--cor-primaria);
+    color: var(--cor-terciaria);
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  button[type="submit"]:hover {
+    background-color: var(--cor-hover-primaria);
+  }
+
+  a {
+    text-align: center;
+    color: var(--cor-secundaria);
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 10px;
+    display: block;
+  }
+
+  a:hover {
+    color: #555555;
+  }
+
+  footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #f0f0f0;
+    color: #666666;
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 8px 0;
+    box-shadow: 0 -1px 5px rgba(0,0,0,0.05);
+    user-select: none;
+    z-index: 100;
+  }
+
+  /* Popup de erro */
+  .popup {
+    position: absolute;
+    bottom: 100%; /* posiciona logo acima do form */
+    left: 50%;
+    transform: translateX(-50%) translateY(-15px);
+    background-color: var(--popup-vermelho);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    box-shadow: 0 6px 15px rgba(217, 83, 79, 0.6);
+    font-size: 1.1rem;
+    z-index: 20;
+    opacity: 1;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    white-space: nowrap;
+    animation: popupFadeIn 0.4s ease forwards;
+  }
+
+  @keyframes popupFadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-15px);
+    }
+  }
+</style>
 </head>
 <body>
-    <div class="main-content">
-        <h2>Registro</h2>
-        <form action="/register_user" method="POST">
-            <div class="input-group">
-                <label for="nome">Nome Completo</label>
-                <input type="text" id="nome" name="nome" required>
-            </div>
-            <div class="input-group">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="input-group">
-                <label for="senha">Senha</label>
-                <input type="password" id="senha" name="senha" required>
-            </div>
-            <button type="submit">Registrar</button>
-        </form>
-        <p>Já tem uma conta? <a href="{{ url_for('login') }}">Faça login aqui</a></p>
-        <p><br></p>
+  <div class="content">
+    <div class="form-container">
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="popup">
+            {{ messages[0] }}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form action="{{ url_for('register_user') }}" method="POST">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required />
+<br><br>
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" name="email" required />
+          <br><br>
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" name="senha" required >
+
+
+        <button type="submit">Registrar</button>
+      </form>
+
+      <a href="{{ url_for('login') }}">Já possui conta? Faça login</a>
     </div>
+  </div>
+
+  <footer>
+    © 2025 Loca USCS
+  </footer>
 </body>
 </html>

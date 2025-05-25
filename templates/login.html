@@ -1,94 +1,202 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - LocaUSCS</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333333;
-        }
-        header {
-            background-color: #87CEFA;
-            padding: 20px;
-            text-align: center;
-            color: white;
-            font-size: 24px;
-        }
-        .form-container {
-            width: 300px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-        }
-        .form-container input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .form-container button {
-            width: 100%;
-            padding: 10px;
-            background-color: #87CEFA;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            font-size: 16px;
-        }
-        .form-container a {
-            display: block;
-            text-align: center;
-            margin-top: 10px;
-            color: #87CEFA;
-            text-decoration: none;
-        }
-        footer {
-            background-color: #FFCC99;
-            text-align: center;
-            padding: 10px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login - LocaUSCS</title>
+  <style>
+    :root {
+      --cor-primaria: #ff7f00; /* laranja */
+      --cor-terciaria: #ffffff; /* branco */
+      --cor-secundaria: #333333; /* cinza escuro */
+      --cor-hover-primaria: #e67300; /* laranja mais escuro */
+      --popup-vermelho: #d9534f; /* vermelho alerta */
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+    }
+
+    .content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+      position: relative; /* para posicionamento absoluto do popup relativo a aqui */
+    }
+
+    .form-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      position: relative;
+      z-index: 10; /* para ficar atrás do popup */
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    button[type="submit"] {
+      background-color: var(--cor-primaria);
+      color: var(--cor-terciaria);
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    button[type="submit"]:hover {
+      background-color: var(--cor-hover-primaria);
+    }
+
+    a {
+      text-align: center;
+      color: var(--cor-secundaria);
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 10px;
+      display: block;
+    }
+
+    a:hover {
+      color: #555555;
+    }
+
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: #f0f0f0;
+      color: #666666;
+      font-size: 0.8rem;
+      text-align: center;
+      padding: 8px 0;
+      box-shadow: 0 -1px 5px rgba(0,0,0,0.05);
+      user-select: none;
+      z-index: 100;
+    }
+
+    /* Popup agora fica acima do form, centralizado horizontalmente */
+    .popup {
+      position: absolute;
+      bottom: 100%; /* posiciona logo acima do form */
+      left: 50%;
+      transform: translateX(-50%) translateY(-15px); /* centraliza e sobe 15px a mais */
+      background-color: var(--popup-vermelho);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(217, 83, 79, 0.6);
+      font-size: 1.1rem;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      white-space: nowrap;
+    }
+
+    .popup.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(-30px); /* sobe um pouco mais quando aparece */
+    }
+
+    .popup .close {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 22px;
+      line-height: 1;
+      color: white;
+      margin-left: auto;
+      user-select: none;
+      padding: 0 6px;
+      border-radius: 50%;
+      transition: background-color 0.3s ease;
+    }
+
+    .popup .close:hover {
+      background-color: rgba(255,255,255,0.3);
+    }
+  </style>
 </head>
 <body>
 
-<header>
-    Login - LocaUSCS
-</header>
-
-<div class="form-container">
-    <form method="POST">
+  <div class="content">
+    <div class="form-container">
+      <form method="POST">
         <label for="email">Email:</label>
-        <input type="email" name="email" id="email" required>
+        <input type="email" name="email" id="email" required />
 
         <label for="senha">Senha:</label>
-        <input type="password" name="senha" id="senha" required>
+        <input type="password" name="senha" id="senha" required />
 
         <button type="submit">Entrar</button>
-    </form>
+      </form>
 
-    <a href="{{ url_for('register_user') }}">Não tem uma conta? Registre-se aqui</a>
+      <a href="{{ url_for('register_user') }}">Não tem uma conta? <br> Registre-se aqui</a>
 
-    {% with messages = get_flashed_messages() %}
+      <!-- POPUP fica dentro do form-container para posicionamento absoluto -->
+      {% with messages = get_flashed_messages() %}
         {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
+          <div id="popup" class="popup show">
+            <p>{{ messages[0] }}</p>
+            <span class="close" onclick="hidePopup()">&times;</span>
+          </div>
         {% endif %}
-    {% endwith %}
-</div>
+      {% endwith %}
+    </div>
+  </div>
 
-<footer>
-    &copy; 2025 LocaUSCS - Todos os direitos reservados.
-</footer>
+  <footer>
+    © 2025 LocaUSCS - Todos os direitos reservados.
+  </footer>
+
+  <script>
+    function hidePopup() {
+      const popup = document.getElementById('popup');
+      if (!popup) return;
+      popup.classList.remove('show');
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 400);
+    }
+
+    window.onload = function() {
+      const popup = document.getElementById('popup');
+      if (popup) {
+        setTimeout(() => {
+          hidePopup();
+        }, 2000);
+      }
+    }
+  </script>
 
 </body>
 </html>
