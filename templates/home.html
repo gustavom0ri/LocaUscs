@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LocaUSCS - Carros</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}" />
+</head>
+<body>
+
+    <!-- Barra Lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>LocaUSCS</h2>
+        </div>
+        <ul class="sidebar-links">
+            <li><a href="{{ url_for('perfil') }}">Perfil</a></li>
+            <li><a href="{{ url_for('registrar_carro') }}">Registrar Carro</a></li>
+            <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
+            <li><a href="{{ url_for('negociacoes') }}">Negociações</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1>Carros Disponíveis</h1>
+
+        <!-- Carros Populares -->
+        <div class="secao-carros">
+            <h2>Carros Populares</h2>
+            <div class="carros-container-horizontal">
+                {% for carro in carros_populares %}
+                    <div class="carro">
+                        <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                        <h3>{{ carro[1] }}</h3>
+                        <p><strong>Ano:</strong> {{ carro[2] }}</p>
+                        <p><strong>KM:</strong> {{ carro[3] }}</p>
+
+                        <form action="{{ url_for('negociar', carro_id=carro[0]) }}" method="post" style="margin-top: 10px;">
+                            <button type="submit" class="btn-contato">Entrar em Contato</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <p>Nenhum carro popular disponível no momento.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Carros de Luxo -->
+        <div class="secao-carros">
+            <h2>Carros de Luxo</h2>
+            <div class="carros-container-horizontal">
+                {% for carro in carros_luxo %}
+                    <div class="carro">
+                        <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                        <h3>{{ carro[1] }}</h3>
+                        <p><strong>Ano:</strong> {{ carro[2] }}</p>
+                        <p><strong>KM:</strong> {{ carro[3] }}</p>
+
+                        <form action="{{ url_for('negociar', carro_id=carro[0]) }}" method="post" style="margin-top: 10px;">
+                            <button type="submit" class="btn-contato">Entrar em Contato</button>
+                        </form>
+                    </div>
+                {% else %}
+                    <p>Nenhum carro de luxo disponível no momento.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Meus Carros -->
+        <div class="secao-carros">
+            <h2>Meus Carros</h2>
+            <div class="carros-container-horizontal">
+                {% for carro in meus_carros %}
+                    <div class="carro">
+                        <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                        <h3>{{ carro[1] }}</h3>
+                        <p><strong>Ano:</strong> {{ carro[2] }}</p>
+                        <p><strong>KM:</strong> {{ carro[3] }}</p>
+                        <a href="{{ url_for('meus_carros') }}" class="btn-contato">Editar</a>
+                    </div>
+                {% else %}
+                    <p>Você ainda não cadastrou nenhum carro.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

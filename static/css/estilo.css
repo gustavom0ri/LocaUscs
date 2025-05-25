@@ -1,0 +1,188 @@
+/* Resetando margens e preenchimentos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Estilo do corpo */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Barra lateral */
+.sidebar {
+    width: 250px;
+    background-color: #FF8C00;
+    height: 100vh;
+    padding: 20px;
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar .logo h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.sidebar-links {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.sidebar-links li {
+    margin: 20px 0;
+}
+
+.sidebar-links a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: block;
+    padding: 10px;
+}
+
+.sidebar-links a:hover {
+    background-color: #00796b;
+    border-radius: 5px;
+}
+
+/* Conteúdo principal */
+.content {
+    margin-left: 250px;
+    padding: 40px;
+    flex: 1;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+/* Containers dos carros */
+.carros-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: flex-start;
+    margin-bottom: 40px;
+}
+
+/* Cada cartão de carro */
+.carro {
+    background-color: #ffffff;
+    padding: 20px;
+    width: 300px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.carro img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.carro h3 {
+    color: #FF8C00;
+    margin-top: 10px;
+}
+
+.carro p {
+    color: #333;
+    margin-top: 10px;
+}
+
+.carro .btn-contato {
+    display: inline-block;
+    margin-top: 20px;
+    background-color: #00796b;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.carro .btn-contato:hover {
+    background-color: #004d40;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    .content {
+        margin-left: 0;
+        padding: 20px;
+    }
+
+    .carros-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .carro {
+        width: 90%;
+    }
+}
+/* Container principal continua o mesmo */
+.content {
+    margin-left: 250px;
+    padding: 40px;
+    flex: 1;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+/* Seção de carros com título */
+.secao-carros {
+    margin-bottom: 50px;
+}
+
+.secao-carros h2 {
+    margin-bottom: 15px;
+    color: #FF8C00;
+}
+
+/* Scroll horizontal nos carros */
+.carros-container-horizontal {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+}
+
+.carros-container-horizontal::-webkit-scrollbar {
+    height: 8px;
+}
+
+.carros-container-horizontal::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 4px;
+}
+
+.carro {
+    background-color: #ffffff;
+    padding: 20px;
+    width: 300px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+}
