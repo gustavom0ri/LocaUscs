@@ -1,6 +1,7 @@
 import smtplib
 import os
 from email.message import EmailMessage
+from email.utils import make_msgid
 
 # Configurações do servidor SMTP
 SMTP_SERVER = 'smtp.gmail.com'
@@ -8,13 +9,102 @@ SMTP_PORT = 587
 USERNAME = "gustavomori382@gmail.com"
 PASSWORD = os.getenv("PASSWORD")
 
-def enviar_email(destinatario, assunto, corpo):
+# Caminhos absolutos das imagens
+LOGO_PATH = r"C:\Users\gusta\PycharmProjects\LocaUscs\static\artes_visuais\locauscs_logo.png"
+PATTERN_PATH = r"C:\Users\gusta\PycharmProjects\LocaUscs\static\artes_visuais\pattern-1.png"
+
+def enviar_email(destinatario, assunto, corpo_html):
     print(f"[LOG] Preparando para enviar email para {destinatario} com assunto '{assunto}'")
+
     msg = EmailMessage()
     msg['Subject'] = assunto
     msg['From'] = USERNAME
     msg['To'] = destinatario
-    msg.set_content(corpo)
+
+    # Gerar Content-IDs únicos para as imagens
+    logo_cid = make_msgid(domain='locauscs.com').strip('<>')
+    pattern_cid = make_msgid(domain='locauscs.com').strip('<>')
+
+    # Corpo HTML com as imagens referenciadas via cid:
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {{
+        background-color: #FFFAF0;
+        margin: 0;
+        padding: 0;
+        font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', cursive, sans-serif;
+      }}
+      .email-container {{
+        background-color: white;
+        border-radius: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px 20px;
+        text-align: center;
+      }}
+      .logo {{
+        max-width: 160px;
+        margin-bottom: 20px;
+      }}
+      .content {{
+        font-size: 16px;
+        color: #444;
+        margin-top: 10px;
+        text-align: left;
+        line-height: 1.6;
+      }}
+      .button {{
+        display: inline-block;
+        margin-top: 30px;
+        padding: 12px 25px;
+        background-color: #FF6B6B;
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+      }}
+      .button:hover {{
+        background-color: #ff8787;
+      }}
+      .footer {{
+        margin-top: 30px;
+        font-size: 12px;
+        color: #999;
+      }}
+    </style>
+    </head>
+    <body>
+      <div class="email-container">
+        <img src="cid:{logo_cid}" alt="LocaUSCS Logo" class="logo" />
+        <div class="content">
+          {corpo_html}
+          <div style="text-align:center;">
+            <a class="button" href="http://127.0.0.1:5000/negociacoes">Ver minhas negociações</a>
+          </div>
+        </div>
+        <div class="footer">
+          ❤️ Obrigado por usar o LocaUSCS!
+        </div>
+      </div>
+    </body>
+    </html>
+    """
+
+    msg.add_alternative(html, subtype='html')
+
+    # Anexa a logo
+    with open(LOGO_PATH, 'rb') as img:
+        msg.get_payload()[0].add_related(img.read(), 'image', 'png', cid=logo_cid)
+
+    # Anexa o pattern
+    with open(PATTERN_PATH, 'rb') as img:
+        msg.get_payload()[0].add_related(img.read(), 'image', 'png', cid=pattern_cid)
 
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:
@@ -28,66 +118,63 @@ def enviar_email(destinatario, assunto, corpo):
 def email_negociacao_recebida(carro_id, dados):
     print(f"[LOG] email_negociacao_recebida chamado para carro_id={carro_id} com dados={dados}")
     assunto = f"Nova negociação para seu veículo {dados.get('veiculo', '')}"
-    corpo = f"""
-Olá,
+    corpo_html = f"""
+    <p>Olá,</p>
+    <p>Você recebeu uma nova proposta de negociação para o veículo <strong>{dados.get('veiculo', '')}</strong>.</p>
 
-Você recebeu uma nova proposta de negociação para o veículo {dados.get('veiculo', '')}.
+    <p><strong>Detalhes da negociação:</strong><br>
+    Nome: {dados.get('nome', '')}<br>
+    Email: {dados.get('email', '')}<br>
+    Telefone: {dados.get('telefone', '')}<br>
+    WhatsApp: {dados.get('whatsapp', '')}<br>
+    Mensagem: {dados.get('mensagem', '')}<br>
+    Valor Proposto: {dados.get('valor_proposto', '')}<br>
+    Duração do Aluguel: {dados.get('duracao', '')}<br>
+    Local de Moradia: {dados.get('local', '')}
+    </p>
 
-Detalhes da negociação:
-Nome: {dados.get('nome', '')}
-Email: {dados.get('email', '')}
-Telefone: {dados.get('telefone', '')}
-WhatsApp: {dados.get('whatsapp', '')}
-Mensagem: {dados.get('mensagem', '')}
-Valor Proposto: {dados.get('valor_proposto', '')}
-Duração do Aluguel: {dados.get('duracao', '')}
-Local de Moradia: {dados.get('local', '')}
+    <p>Por favor, acesse sua conta para responder ou atualizar o status da negociação.</p>
 
-Por favor, acesse sua conta para responder ou atualizar o status da negociação.
+    <p>Atenciosamente,<br>LocaUSCS</p>
+    """
 
-Atenciosamente,
-LocaUSCS
-"""
     from locauscs import obter_email_dono_carro
     email_dono = obter_email_dono_carro(carro_id)
     if email_dono:
         print(f"[LOG] Email do dono do carro encontrado: {email_dono}")
-        enviar_email(email_dono, assunto, corpo)
+        enviar_email(email_dono, assunto, corpo_html)
     else:
         print(f"[ERRO] Email do dono do carro não encontrado para carro_id={carro_id}")
 
 def email_negociacao_criada(email_locatario, dados):
     print(f"[LOG] email_negociacao_criada chamado para email_locatario={email_locatario} com dados={dados}")
     assunto = f"Confirmação de negociação para {dados.get('veiculo', '')}"
-    corpo = f"""
-Olá,
+    corpo_html = f"""
+    <p>Olá,</p>
 
-Sua proposta de negociação para o veículo {dados.get('veiculo', '')} foi registrada com sucesso.
+    <p>Sua proposta de negociação para o veículo <strong>{dados.get('veiculo', '')}</strong> foi registrada com sucesso.</p>
 
-Você será informado sobre qualquer alteração no status da negociação.
+    <p>Você será informado sobre qualquer alteração no status da negociação.</p>
 
-Atenciosamente,
-LocaUSCS
-"""
-    enviar_email(email_locatario, assunto, corpo)
+    <p>Atenciosamente,<br>LocaUSCS</p>
+    """
+    enviar_email(email_locatario, assunto, corpo_html)
 
 def email_status_alterado(email_locatario, dados):
     print(f"[LOG] email_status_alterado chamado para email_locatario={email_locatario} com dados={dados}")
     assunto = f"Status da negociação atualizado para {dados.get('veiculo', '')}"
-    corpo = f"""
-Olá,
+    corpo_html = f"""
+    <p>Olá,</p>
 
-O status da sua negociação para o veículo {dados.get('veiculo', '')} foi alterado para: {dados.get('status', '')}.
+    <p>O status da sua negociação para o veículo <strong>{dados.get('veiculo', '')}</strong> foi alterado para: <strong>{dados.get('status', '')}</strong>.</p>
 
-Por favor, acesse sua conta para mais informações.
+    <p>Por favor, acesse sua conta para mais informações.</p>
 
-Atenciosamente,
-LocaUSCS
-"""
-    enviar_email(email_locatario, assunto, corpo)
+    <p>Atenciosamente,<br>LocaUSCS</p>
+    """
+    enviar_email(email_locatario, assunto, corpo_html)
 
-# Exemplos de funções de log para chamadas e envios relacionados à negociação
-
+# Funções de log (mantidas iguais)
 def log_chamada_negociacao_recebida(carro_id, dados):
     print(f"[LOG] Chamada recebida de negociação para carro_id={carro_id} com dados: {dados}")
 
@@ -99,10 +186,3 @@ def log_negociacao_criada(negociacao_id, dados):
 
 def log_status_alterado(negociacao_id, status_antigo, status_novo):
     print(f"[LOG] Status da negociação {negociacao_id} alterado de '{status_antigo}' para '{status_novo}'")
-
-# Uso hipotético dos logs junto com as funções principais:
-# (Você pode chamar esses logs dentro das funções onde fizer sentido)
-
-# Exemplo:
-# log_chamada_negociacao_recebida(carro_id, dados)
-# email_negociacao_recebida(carro_id, dados)

@@ -79,137 +79,190 @@
 </head>
 <body>
 
-    <!-- Modal HTML (único, reutilizável) -->
-    <div id="modalNegociacao" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="fecharModal()">&times;</span>
-            <h3>Negociar Aluguel</h3>
-            <form id="formNegociacao" method="POST">
-    <input type="hidden" name="id_carro" id="id_carro_modal">
+<!-- Tela de Loading -->
+<div id="loading" style="
+    position: fixed;
+    z-index: 9999;
+    background-color: #ffffff;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+">
+    <img src="{{ url_for('static', filename='artes_visuais/loading.gif') }}" alt="Carregando..." width="100" />
+</div>
 
-    <label>Seu nome:</label>
-    <input type="text" name="nome" required>
+<!-- Notificação de Sucesso -->
+<div id="notificacao" style="
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    z-index: 9999;
+    font-family: sans-serif;
+">
+    ✅ Negociação concluída com sucesso!
+</div>
 
-    <label>Por quanto tempo deseja alugar?</label>
-    <input type="text" name="duracao_aluguel" placeholder="Ex: 1 semana, 3 dias, 1 mês..." required>
+<!-- Modal de Negociação -->
+<div id="modalNegociacao" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="fecharModal()">&times;</span>
+        <h3>Negociar Aluguel</h3>
+        <form id="formNegociacao" method="POST">
+            <input type="hidden" name="id_carro" id="id_carro_modal">
 
-    <label>Onde você mora?</label>
-    <input type="text" name="local_moradia" placeholder="Cidade / Bairro" required>
+            <label>Seu nome:</label>
+            <input type="text" name="nome" required>
 
-    <label>Quanto está disposto a pagar? (R$)</label>
-    <input type="number" name="valor_proposto" step="0.01" required>
+            <label>Por quanto tempo deseja alugar?</label>
+            <input type="text" name="duracao_aluguel" placeholder="Ex: 1 semana, 3 dias, 1 mês..." required>
 
-    <label>Seu e-mail:</label>
-    <input type="email" name="email" required>
+            <label>Onde você mora?</label>
+            <input type="text" name="local_moradia" placeholder="Cidade / Bairro" required>
 
-    <label>Telefone:</label>
-    <input type="tel" name="telefone" placeholder="(XX) XXXX-XXXX" required>
+            <label>Quanto está disposto a pagar? (R$)</label>
+            <input type="number" name="valor_proposto" step="0.01" required>
 
-    <label>WhatsApp:</label>
-    <input type="tel" name="whatsapp" placeholder="(XX) XXXXX-XXXX" required>
+            <label>Seu e-mail:</label>
+            <input type="email" name="email" required>
 
-    <label>Mensagem personalizada (opcional):</label>
-    <textarea name="mensagem" rows="4" placeholder="Digite aqui sua mensagem..."></textarea>
+            <label>Telefone:</label>
+            <input type="tel" name="telefone" placeholder="(XX) XXXX-XXXX" required>
 
-    <button type="submit">Enviar</button>
-</form>
+            <label>WhatsApp:</label>
+            <input type="tel" name="whatsapp" placeholder="(XX) XXXXX-XXXX" required>
 
+            <label>Mensagem personalizada (opcional):</label>
+            <textarea name="mensagem" rows="4" placeholder="Digite aqui sua mensagem..."></textarea>
+
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Barra Lateral -->
+<div class="sidebar">
+    <div class="logo">
+        <h2>LocaUSCS</h2>
+    </div>
+    <ul class="sidebar-links">
+        <li><a href="{{ url_for('perfil') }}">Perfil</a></li>
+        <li><a href="{{ url_for('registrar_carro') }}">Registrar Carro</a></li>
+        <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
+        <li><a href="{{ url_for('negociacoes') }}">Negociações</a></li>
+    </ul>
+</div>
+
+<!-- Conteúdo Principal -->
+<div class="content">
+    <h1><b>Carros Disponíveis</b></h1>
+
+    <!-- Carros Populares -->
+    <div class="secao-carros">
+        <h2>Carros Populares</h2>
+        <div class="carros-container-horizontal">
+            {% for carro in carros_populares %}
+                <div class="carro">
+                    <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                    <h3>{{ carro[1] }}</h3>
+                    <p><strong>Ano:</strong> {{ carro[2] }}</p>
+                    <p><strong>KM:</strong> {{ carro[3] }}</p>
+                    <button type="button" class="btn-contato" onclick="abrirModal({{ carro[0] }})">Entrar em Contato</button>
+                </div>
+            {% else %}
+                <p>Nenhum carro popular disponível no momento.</p>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- Barra Lateral -->
-    <div class="sidebar">
-        <div class="logo">
-            <h2>LocaUSCS</h2>
-        </div>
-        <ul class="sidebar-links">
-            <li><a href="{{ url_for('perfil') }}">Perfil</a></li>
-            <li><a href="{{ url_for('registrar_carro') }}">Registrar Carro</a></li>
-            <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
-            <li><a href="{{ url_for('negociacoes') }}">Negociações</a></li>
-        </ul>
-    </div>
-
-    <div class="content">
-        <h1><b>Carros Disponíveis</b></h1>
-
-        <!-- Carros Populares -->
-        <div class="secao-carros">
-            <h2>Carros Populares</h2>
-            <div class="carros-container-horizontal">
-                {% for carro in carros_populares %}
-                    <div class="carro">
-                        <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
-                        <h3>{{ carro[1] }}</h3>
-                        <p><strong>Ano:</strong> {{ carro[2] }}</p>
-                        <p><strong>KM:</strong> {{ carro[3] }}</p>
-                        <button type="button" class="btn-contato" onclick="abrirModal({{ carro[0] }})">Entrar em Contato</button>
-                    </div>
-                {% else %}
-                    <p>Nenhum carro popular disponível no momento.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Carros de Luxo -->
-        <div class="secao-carros">
-            <h2>Carros de Luxo</h2>
-            <div class="carros-container-horizontal">
-                {% for carro in carros_luxo %}
-                    <div class="carro">
-                        <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
-                        <h3>{{ carro[1] }}</h3>
-                        <p><strong>Ano:</strong> {{ carro[2] }}</p>
-                        <p><strong>KM:</strong> {{ carro[3] }}</p>
-                        <button type="button" class="btn-contato" onclick="abrirModal({{ carro[0] }})">Entrar em Contato</button>
-                    </div>
-                {% else %}
-                    <p>Nenhum carro de luxo disponível no momento.</p>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Meus Carros -->
-        <div class="secao-carros">
-            <h2>Meus Carros</h2>
-            <div class="carros-container-horizontal">
-                {% for carro in meus_carros %}
-                    <div class="carro">
-                        <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
-                        <h3>{{ carro[1] }}</h3>
-                        <p><strong>Ano:</strong> {{ carro[2] }}</p>
-                        <p><strong>KM:</strong> {{ carro[3] }}</p>
-                        <a href="{{ url_for('meus_carros') }}" class="btn-contato">Editar</a>
-                    </div>
-                {% else %}
-                    <p>Você ainda não cadastrou nenhum carro.</p>
-                {% endfor %}
-            </div>
+    <!-- Carros de Luxo -->
+    <div class="secao-carros">
+        <h2>Carros de Luxo</h2>
+        <div class="carros-container-horizontal">
+            {% for carro in carros_luxo %}
+                <div class="carro">
+                    <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                    <h3>{{ carro[1] }}</h3>
+                    <p><strong>Ano:</strong> {{ carro[2] }}</p>
+                    <p><strong>KM:</strong> {{ carro[3] }}</p>
+                    <button type="button" class="btn-contato" onclick="abrirModal({{ carro[0] }})">Entrar em Contato</button>
+                </div>
+            {% else %}
+                <p>Nenhum carro de luxo disponível no momento.</p>
+            {% endfor %}
         </div>
     </div>
 
-    <script>
-        function abrirModal(carroId) {
-            const modal = document.getElementById('modalNegociacao');
-            const idInput = document.getElementById('id_carro_modal');
-            const form = document.getElementById('formNegociacao');
+    <!-- Meus Carros -->
+    <div class="secao-carros">
+        <h2>Meus Carros</h2>
+        <div class="carros-container-horizontal">
+            {% for carro in meus_carros %}
+                <div class="carro">
+                    <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                    <h3>{{ carro[1] }}</h3>
+                    <p><strong>Ano:</strong> {{ carro[2] }}</p>
+                    <p><strong>KM:</strong> {{ carro[3] }}</p>
+                    <a href="{{ url_for('meus_carros') }}" class="btn-contato">Editar</a>
+                </div>
+            {% else %}
+                <p>Você ainda não cadastrou nenhum carro.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 
-            idInput.value = carroId;
-            form.action = `/negociar/${carroId}`;
+<!-- Scripts -->
+<script>
+    function abrirModal(carroId) {
+        const modal = document.getElementById('modalNegociacao');
+        const idInput = document.getElementById('id_carro_modal');
+        const form = document.getElementById('formNegociacao');
 
-            modal.style.display = 'block';
+        idInput.value = carroId;
+        form.action = `/negociar/${carroId}`;
+
+        modal.style.display = 'block';
+    }
+
+    function fecharModal() {
+        document.getElementById('modalNegociacao').style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('modalNegociacao');
+        if (event.target == modal) {
+            modal.style.display = "none";
         }
+    }
 
-        function fecharModal() {
-            document.getElementById('modalNegociacao').style.display = 'none';
+    // Exibir notificação de sucesso
+    window.addEventListener('DOMContentLoaded', function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('sucesso') === '1') {
+            const notificacao = document.getElementById('notificacao');
+            notificacao.style.display = 'block';
+            setTimeout(() => {
+                notificacao.style.display = 'none';
+            }, 3000);
         }
+    });
 
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalNegociacao');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    </script>
+    // Esconde a tela de loading após carregar
+    window.addEventListener('load', function () {
+        const loading = document.getElementById('loading');
+        loading.style.display = 'none';
+    });
+</script>
+
 </body>
 </html>

@@ -3,6 +3,7 @@ import sqlite3
 import hashlib
 import os
 import logging
+import re
 from send_email import email_negociacao_recebida, email_negociacao_criada, email_status_alterado
 
 logging.basicConfig(level=logging.DEBUG)
@@ -47,6 +48,33 @@ def inicializar_banco():
     conn.close()
 
 inicializar_banco()
+
+
+def extrair_dados(descricao):
+    campos = {
+        "nome": "",
+        "duracao": "",
+        "moradia": "",
+        "valor": "",
+        "whatsapp": "",
+        "mensagem": ""
+    }
+
+    padroes = {
+        "nome": r"Nome:\s*(.+)",
+        "duracao": r"Duração do Aluguel:\s*(.+)",
+        "moradia": r"Local de Moradia:\s*(.+)",
+        "valor": r"Valor Proposto:\s*(.+)",
+        "whatsapp": r"WhatsApp:\s*(.+)",
+        "mensagem": r"Mensagem:\s*(.*)",
+    }
+
+    for chave, padrao in padroes.items():
+        resultado = re.search(padrao, descricao)
+        if resultado:
+            campos[chave] = resultado.group(1).strip()
+
+    return campos
 
 @app.route('/')
 def home():
@@ -258,7 +286,8 @@ def negociar(id_carro):
     email_negociacao_criada(email, dados_email)
 
     flash("Negociação enviada com sucesso!", "success")
-    return redirect('/')
+    return redirect(url_for('home', sucesso=1))
+
 
 
 @app.route('/negociacoes', methods=['GET', 'POST'])
@@ -322,6 +351,36 @@ def negociacoes():
                            negociacoes_dono=negociacoes_dono,
                            negociacoes_locatario=negociacoes_locatario)
 
+
+@app.route('/recusar_negociacao', methods=['POST'])
+def recusar_negociacao():
+    try:
+        negociacao_id = request.form.get('negociacao_id')
+
+        if not negociacao_id:
+            flash("ID da negociação não fornecido.", "error")
+            return redirect(url_for('negociacoes'))
+
+        # Certifique-se de que é um número inteiro
+        try:
+            negociacao_id = int(negociacao_id)
+        except ValueError:
+            flash("ID inválido.", "error")
+            return redirect(url_for('negociacoes'))
+
+        # Conexão e exclusão
+        conn = sqlite3.connect('locauscs.db')
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM negociacoes WHERE id = ?", (negociacao_id,))
+        conn.commit()
+        conn.close()
+
+        flash("Negociação recusada com sucesso.", "success")
+
+    except Exception as e:
+        flash(f"Ocorreu um erro: {str(e)}", "error")
+
+    return redirect(url_for('negociacoes'))
 
 @app.route('/perfil')
 def perfil():
