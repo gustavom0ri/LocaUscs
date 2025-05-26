@@ -165,22 +165,34 @@
 
     <script>
         function abrirModal(negociacao) {
-            document.getElementById("modalNome").innerText = negociacao[2] || "";
-            document.getElementById("modalDuracao").innerText = negociacao[3] || "";
-            document.getElementById("modalLocal").innerText = negociacao[4] || "";
-            document.getElementById("modalValor").innerText = negociacao[5] || "";
-            document.getElementById("modalWhatsapp").innerText = negociacao[6] || "";
-            document.getElementById("modalMensagem").innerText = negociacao[7] || "";
-            document.getElementById("modalEmail").innerText = negociacao[8] || "";
-            document.getElementById("modalTelefone").innerText = negociacao[9] || "";
-            document.getElementById("modalStatus").innerText = negociacao[10] || "";
+    document.getElementById("modalNome").innerText = negociacao[2] || "";
+    document.getElementById("modalDuracao").innerText = negociacao[3] || "";
+    document.getElementById("modalLocal").innerText = negociacao[4] || "";
+    document.getElementById("modalValor").innerText = negociacao[5] || "";
+    document.getElementById("modalWhatsapp").innerText = negociacao[6] || "";
+    document.getElementById("modalMensagem").innerText = negociacao[7] || "";
+    document.getElementById("modalEmail").innerText = negociacao[8] || "";
+    document.getElementById("modalTelefone").innerText = negociacao[9] || "";
+    document.getElementById("modalStatus").innerText = negociacao[10] || "";
 
-            document.getElementById("btnWhatsApp").href = "https://wa.me/" + (negociacao[6] ? negociacao[6].replace(/\D/g, '') : "");
-            document.getElementById("btnEmail").href = "mailto:" + (negociacao[8] || "");
-            document.getElementById("modalNegociacaoId").value = negociacao[0] || "";
+    // WhatsApp agora usa negociacao[4] (número de telefone)
+    let numeroWhatsapp = negociacao[4] ? negociacao[4].replace(/\D/g, '') : '';
 
-            document.getElementById("modalNegociacao").style.display = "block";
-        }
+    // Se o número não começar com 55, adiciona o código do Brasil
+    if (!numeroWhatsapp.startsWith('55')) {
+        numeroWhatsapp = '55' + numeroWhatsapp;
+    }
+
+    document.getElementById("btnWhatsApp").href = "https://wa.me/" + numeroWhatsapp;
+
+    // Email agora usa negociacao[3]
+    document.getElementById("btnEmail").href = "mailto:" + (negociacao[3] || "");
+
+    document.getElementById("modalNegociacaoId").value = negociacao[0] || "";
+
+    document.getElementById("modalNegociacao").style.display = "block";
+}
+
 
         function fecharModal() {
             document.getElementById("modalNegociacao").style.display = "none";

@@ -396,6 +396,32 @@ def perfil():
 
     return render_template('perfil.html', usuario=usuario)
 
+@app.route('/atualizar_perfil', methods=['POST'])
+def atualizar_perfil():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    username = request.form['username']
+    email = request.form['email']
+    senha = request.form.get('senha', '').strip()
+
+    conn = sqlite3.connect('locauscs.db')
+    cursor = conn.cursor()
+
+    if senha:
+        senha_criptografada = hashlib.sha256(senha.encode()).hexdigest()
+        cursor.execute("UPDATE usuarios SET username = ?, email = ?, senha = ? WHERE id = ?",
+                       (username, email, senha_criptografada, user_id))
+    else:
+        cursor.execute("UPDATE usuarios SET username = ?, email = ? WHERE id = ?",
+                       (username, email, user_id))
+
+    conn.commit()
+    conn.close()
+
+    flash("Perfil atualizado com sucesso!", "success")
+    return redirect(url_for('perfil'))
 @app.route('/logout')
 def logout():
     session.clear()
