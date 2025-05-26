@@ -1,33 +1,212 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/estilo.css') }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LocaUSCS - Carros</title>
+    <style>
+        /* Seu CSS base (reset e variáveis) */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cor-primaria: #FF8C00;  /* Laranja */
+            --cor-secundaria: #1E90FF; /* Azul */
+            --cor-terciaria: #FFFFFF; /* Branco */
+            --cor-hover-secundaria: #1565c0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: var(--cor-primaria);
+            height: 100vh;
+            padding: 20px;
+            color: var(--cor-terciaria);
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar .logo h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .sidebar-links {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .sidebar-links li {
+            margin: 20px 0;
+        }
+
+        .sidebar-links a {
+            color: var(--cor-terciaria);
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .sidebar-links a:hover {
+            background-color: var(--cor-hover-secundaria);
+        }
+
+        .content {
+            margin-left: 250px;
+            padding: 40px;
+            flex: 1;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        h1 {
+            color: var(--cor-primaria);
+            margin-bottom: 30px;
+        }
+
+        /* Estilo do formulário para ficar harmonioso com seu layout */
+        form {
+            background-color: var(--cor-terciaria);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(255, 140, 0, 0.3);
+            max-width: 480px;
+            font-size: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--cor-primaria);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 25px;
+            border: 2px solid var(--cor-primaria);
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: var(--cor-secundaria);
+            outline: none;
+            box-shadow: 0 0 5px var(--cor-secundaria);
+        }
+
+        button {
+            background-color: var(--cor-primaria);
+            color: var(--cor-terciaria);
+            border: none;
+            padding: 14px 0;
+            width: 100%;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--cor-hover-secundaria);
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 25px;
+            color: var(--cor-primaria);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul {
+            list-style-type: none;
+            margin-bottom: 20px;
+        }
+
+        li.success {
+            color: #27ae60; /* verde para sucesso */
+            margin-bottom: 10px;
+        }
+
+        li.error {
+            color: #c0392b; /* vermelho para erro */
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Barra lateral -->
+
+    <!-- Barra Lateral -->
     <div class="sidebar">
-        <ul>
-            <li><a href="{{ url_for('home') }}">Página Principal</a></li>
-            <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
+        <div class="logo">
+            <h2>LocaUSCS</h2>
+        </div>
+        <ul class="sidebar-links">
+            <li><a href="{{ url_for('home') }}">Tela principal</a></li>
             <li><a href="{{ url_for('registrar_carro') }}">Registrar Carro</a></li>
-            <li><a href="{{ url_for('perfil') }}">Perfil</a></li>
+            <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
             <li><a href="{{ url_for('negociacoes') }}">Negociações</a></li>
         </ul>
     </div>
 
-    <!-- Conteúdo Principal -->
     <div class="content">
-        <h1>Perfil</h1>
-        <form action="{{ url_for('atualizar_perfil') }}" method="post">
-            <label for="username">Nome de Usuário:</label>
-            <input type="text" id="username" name="username" value="{{ usuario['username'] }}" required><br>
+        <h1>Editar Perfil</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul>
+                    {% for category, message in messages %}
+                        <li class="{{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('atualizar_perfil') }}" method="POST">
+            <label for="username">Nome:</label>
+            <input type="text" id="username" name="username" value="{{ usuario[1] }}" required>
+
             <label for="email">E-mail:</label>
-            <input type="email" id="email" name="email" value="{{ usuario['email'] }}" required><br>
-            <button type="submit">Atualizar</button>
+            <input type="email" id="email" name="email" value="{{ usuario[2] }}" required>
+
+            <label for="senha">Nova senha (opcional):</label>
+            <input type="password" id="senha" name="senha" placeholder="Deixe em branco para manter a atual">
+
+            <button type="submit">Salvar alterações</button>
         </form>
+
+        <a href="{{ url_for('home') }}">Voltar</a>
     </div>
+
 </body>
 </html>

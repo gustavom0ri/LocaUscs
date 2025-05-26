@@ -1,20 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import sqlite3
 import hashlib
 import os
 import logging
-from send_email import enviar_email
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-import hashlib
-import sqlite3
-import logging
+from send_email import email_negociacao_recebida, email_negociacao_criada, email_status_alterado
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Chave secreta para sessão
+app.secret_key = os.urandom(24)
 
-# Inicialização do banco de dados
 def inicializar_banco():
     conn = sqlite3.connect('locauscs.db')
     cursor = conn.cursor()
@@ -44,6 +39,7 @@ def inicializar_banco():
         descricao TEXT NOT NULL,
         email_contato TEXT NOT NULL,
         telefone TEXT NOT NULL,
+        status TEXT DEFAULT 'Pendente',
         FOREIGN KEY (carro_id) REFERENCES carros(id)
     )''')
 
@@ -51,8 +47,6 @@ def inicializar_banco():
     conn.close()
 
 inicializar_banco()
-
-# --- ROTAS ---
 
 @app.route('/')
 def home():
@@ -63,14 +57,13 @@ def home():
     conn = sqlite3.connect('locauscs.db')
     cursor = conn.cursor()
 
-    # Selecionar explicitamente as colunas para evitar confusão no índice
-    cursor.execute("SELECT id, modelo, ano, km, lkm, categoria, imagem, usuario_id FROM carros WHERE categoria = 'popular'")
+    cursor.execute("SELECT * FROM carros WHERE categoria = 'popular'")
     carros_populares = cursor.fetchall()
 
-    cursor.execute("SELECT id, modelo, ano, km, lkm, categoria, imagem, usuario_id FROM carros WHERE categoria = 'luxo'")
+    cursor.execute("SELECT * FROM carros WHERE categoria = 'luxo'")
     carros_luxo = cursor.fetchall()
 
-    cursor.execute("SELECT id, modelo, ano, km, lkm, categoria, imagem, usuario_id FROM carros WHERE usuario_id = ?", (user_id,))
+    cursor.execute("SELECT * FROM carros WHERE usuario_id = ?", (user_id,))
     meus_carros = cursor.fetchall()
 
     conn.close()
@@ -85,12 +78,8 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         senha = request.form['senha']
-        logging.debug(f"Tentativa de login com: {email}")
-
-        # Criptografar a senha
         senha_criptografada = hashlib.sha256(senha.encode()).hexdigest()
 
-        # Verificar usuário no banco de dados
         conn = sqlite3.connect('locauscs.db')
         cursor = conn.cursor()
         cursor.execute('SELECT id FROM usuarios WHERE email = ? AND senha = ?', (email, senha_criptografada))
@@ -99,12 +88,10 @@ def login():
 
         if usuario:
             session['user_id'] = usuario[0]
-            logging.info(f"Login bem-sucedido para {email}")
             return redirect(url_for('home'))
         else:
-            logging.warning("Usuário ou senha inválidos")
-            flash("Usuário ou senha inválidos")  # Passa a mensagem para o template
-            return redirect(url_for('login'))    # Redireciona para GET da rota, que renderiza o template
+            flash("Usuário ou senha inválidos", "error")
+            return redirect(url_for('login'))
     return render_template('login.html')
 
 @app.route('/register_user', methods=['GET', 'POST'])
@@ -114,7 +101,6 @@ def register_user():
         email = request.form.get('email', '').strip()
         senha = request.form.get('senha', '').strip()
 
-        # Validação básica de campos obrigatórios
         if not nome or not email or not senha:
             flash("Por favor, preencha todos os campos.", "error")
             return redirect(url_for('register_user'))
@@ -123,11 +109,9 @@ def register_user():
 
         conn = sqlite3.connect('locauscs.db')
         cursor = conn.cursor()
-
-        # Verifica se o email já existe
         cursor.execute('SELECT id FROM usuarios WHERE email = ?', (email,))
         if cursor.fetchone():
-            flash("E-mail já cadastrado. Use outro e-mail.", "error")
+            flash("E-mail já cadastrado.", "error")
             conn.close()
             return redirect(url_for('register_user'))
 
@@ -135,58 +119,52 @@ def register_user():
         conn.commit()
         conn.close()
 
-        flash("Usuário registrado com sucesso! Faça login.", "success")
+        flash("Usuário registrado com sucesso!", "success")
         return redirect(url_for('login'))
 
     return render_template('register_user.html')
 
-@app.route('/profile')
-def profile():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    return render_template('profile.html')
 
-@app.route('/negociar/<int:carro_id>', methods=['POST'])
-def negociar(carro_id):
-    descricao = request.form.get('descricao')
-    email_contato = request.form.get('email')
-    telefone = request.form.get('telefone')
-
+def obter_email_dono_carro(id_carro):
     conn = sqlite3.connect('locauscs.db')
     cursor = conn.cursor()
-
-    cursor.execute('SELECT modelo, usuario_id FROM carros WHERE id = ?', (carro_id,))
-    carro = cursor.fetchone()
-    if not carro:
-        conn.close()
-        return "Carro não encontrado", 404
-
-    modelo, usuario_id = carro
-    cursor.execute('SELECT email FROM usuarios WHERE id = ?', (usuario_id,))
-    dono = cursor.fetchone()
-
-    cursor.execute('''INSERT INTO negociacoes (carro_id, descricao, email_contato, telefone)
-                      VALUES (?, ?, ?, ?)''', (carro_id, descricao, email_contato, telefone))
-    conn.commit()
+    cursor.execute("""
+        SELECT u.email FROM usuarios u
+        JOIN carros c ON c.usuario_id = u.id
+        WHERE c.id = ?
+    """, (id_carro,))
+    resultado = cursor.fetchone()
     conn.close()
+    if resultado:
+        return resultado[0]
+    return None
 
-    if dono:
-        email_dono = dono[0]
-        mensagem = f"""Subject: Aviso! Alguém está interessado em alugar o seu veículo {modelo}
 
-Olá,
+@app.route('/registrar_carro', methods=['GET', 'POST'])
+def registrar_carro():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
 
-Um interessado deixou a seguinte mensagem sobre o seu carro {modelo}:
+    if request.method == 'POST':
+        modelo = request.form['modelo']
+        ano = request.form['ano']
+        km = request.form['km']
+        lkm = request.form['lkm']
+        categoria = request.form['categoria']
+        imagem = request.form['imagem']
+        usuario_id = session['user_id']
 
-{descricao}
+        conn = sqlite3.connect('locauscs.db')
+        cursor = conn.cursor()
+        cursor.execute('''INSERT INTO carros (modelo, ano, km, lkm, categoria, imagem, usuario_id)
+                          VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                       (modelo, ano, km, lkm, categoria, imagem, usuario_id))
+        conn.commit()
+        conn.close()
 
-Informações de contato:
-E-mail: {email_contato}
-Telefone: {telefone}
-"""
-        enviar_email(mensagem)
+        return redirect(url_for('meus_carros'))
 
-    return redirect(url_for('home'))
+    return render_template('registrar_carro.html')
 
 @app.route('/meus_carros')
 def meus_carros():
@@ -196,14 +174,11 @@ def meus_carros():
     user_id = session['user_id']
     conn = sqlite3.connect('locauscs.db')
     cursor = conn.cursor()
-
-    cursor.execute("SELECT id, modelo, ano, km, lkm, categoria, imagem, usuario_id FROM carros WHERE usuario_id = ?", (user_id,))
+    cursor.execute("SELECT * FROM carros WHERE usuario_id = ?", (user_id,))
     carros = cursor.fetchall()
     conn.close()
 
     return render_template('meus_carros.html', carros=carros)
-
-
 
 @app.route('/editar_carro/<int:carro_id>', methods=['POST'])
 def editar_carro(carro_id):
@@ -228,34 +203,125 @@ def editar_carro(carro_id):
 
     return redirect(url_for('meus_carros'))
 
+@app.route('/negociar/<int:id_carro>', methods=['POST'])
+def negociar(id_carro):
+    nome = request.form['nome']
+    duracao = request.form['duracao_aluguel']
+    local = request.form['local_moradia']
+    valor = request.form['valor_proposto']
+    email = request.form['email']
+    telefone = request.form['telefone']
+    whatsapp = request.form['whatsapp']
+    mensagem = request.form['mensagem']
 
-@app.route('/registrar_carro', methods=['GET', 'POST'])
-def registrar_carro():
+    descricao = f'''
+    Nome: {nome}
+    Duração do Aluguel: {duracao}
+    Local de Moradia: {local}
+    Valor Proposto: {valor}
+    WhatsApp: {whatsapp}
+    Mensagem: {mensagem}
+    '''.strip()
+
+    # Pegar o modelo do carro para colocar no e-mail
+    conn = sqlite3.connect('locauscs.db')
+    cursor = conn.cursor()
+    cursor.execute('SELECT modelo FROM carros WHERE id = ?', (id_carro,))
+    carro = cursor.fetchone()
+    modelo_carro = carro[0] if carro else 'Desconhecido'
+
+    # Inserir negociação no banco
+    cursor.execute('''
+        INSERT INTO negociacoes (carro_id, descricao, email_contato, telefone)
+        VALUES (?, ?, ?, ?)
+    ''', (id_carro, descricao, email, telefone))
+    conn.commit()
+    conn.close()
+
+    # Dados para o e-mail
+    dados_email = {
+        'nome': nome,
+        'email': email,
+        'telefone': telefone,
+        'whatsapp': whatsapp,
+        'mensagem': mensagem,
+        'valor_proposto': valor,
+        'duracao': duracao,
+        'local': local,
+        'veiculo': modelo_carro
+    }
+
+    # Enviar e-mail ao dono do carro
+    email_negociacao_recebida(id_carro, dados_email)
+
+    # Enviar e-mail de confirmação ao locatário
+    email_negociacao_criada(email, dados_email)
+
+    flash("Negociação enviada com sucesso!", "success")
+    return redirect('/')
+
+
+@app.route('/negociacoes', methods=['GET', 'POST'])
+def negociacoes():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
+    user_id = session['user_id']
+    conn = sqlite3.connect('locauscs.db')
+    cursor = conn.cursor()
+
     if request.method == 'POST':
-        modelo = request.form['modelo']
-        ano = request.form['ano']
-        km = request.form['km']
-        lkm = request.form['lkm']
-        categoria = request.form['categoria']
-        imagem = request.form['imagem']
-        usuario_id = session['user_id']
+        negociacao_id = request.form.get('negociacao_id')
+        novo_status = request.form.get('status')
 
-        conn = sqlite3.connect('locauscs.db')
-        cursor = conn.cursor()
-
-        cursor.execute('''INSERT INTO carros (modelo, ano, km, lkm, categoria, imagem, usuario_id) 
-                          VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                       (modelo, ano, km, lkm, categoria, imagem, usuario_id))
-
+        # Atualizar status da negociação
+        cursor.execute('UPDATE negociacoes SET status = ? WHERE id = ?', (novo_status, negociacao_id))
         conn.commit()
-        conn.close()
 
-        return redirect(url_for('meus_carros'))
+        # Buscar dados para email
+        cursor.execute('''SELECT n.id, n.status, u.email, c.modelo
+                          FROM negociacoes n
+                          JOIN usuarios u ON u.email = n.email_contato
+                          JOIN carros c ON c.id = n.carro_id
+                          WHERE n.id = ?''', (negociacao_id,))
+        resultado = cursor.fetchone()
 
-    return render_template('registrar_carro.html')
+        if resultado:
+            _, status, email_locatario, modelo_veiculo = resultado
+            dados_negociacao = {
+                'veiculo': modelo_veiculo,
+                'status': status
+            }
+            # Enviar email ao locatário informando a alteração de status
+            email_status_alterado(email_locatario, dados_negociacao)
+
+        flash("Status da negociação atualizado.", "success")
+
+    # Exibir negociações relacionadas ao usuário (se dono do carro ou locatário)
+    # Buscando negociações de carros que o usuário possui
+    cursor.execute('''
+        SELECT n.id, c.modelo, n.descricao, n.email_contato, n.telefone, n.status
+        FROM negociacoes n
+        JOIN carros c ON n.carro_id = c.id
+        WHERE c.usuario_id = ?
+    ''', (user_id,))
+    negociacoes_dono = cursor.fetchall()
+
+    # Buscando negociações feitas pelo usuário (email do locatário)
+    cursor.execute('''
+        SELECT n.id, c.modelo, n.descricao, n.email_contato, n.telefone, n.status
+        FROM negociacoes n
+        JOIN carros c ON n.carro_id = c.id
+        WHERE n.email_contato = (SELECT email FROM usuarios WHERE id = ?)
+    ''', (user_id,))
+    negociacoes_locatario = cursor.fetchall()
+
+    conn.close()
+
+    return render_template('negociacoes.html',
+                           negociacoes_dono=negociacoes_dono,
+                           negociacoes_locatario=negociacoes_locatario)
+
 
 @app.route('/perfil')
 def perfil():
@@ -265,47 +331,16 @@ def perfil():
     user_id = session['user_id']
     conn = sqlite3.connect('locauscs.db')
     cursor = conn.cursor()
-
     cursor.execute("SELECT * FROM usuarios WHERE id = ?", (user_id,))
     usuario = cursor.fetchone()
     conn.close()
 
     return render_template('perfil.html', usuario=usuario)
 
-@app.route('/atualizar_perfil', methods=['POST'])
-def atualizar_perfil():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    user_id = session['user_id']
-    username = request.form['username']
-    email = request.form['email']
-
-    conn = sqlite3.connect('locauscs.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE usuarios SET username = ?, email = ? WHERE id = ?", (username, email, user_id))
-    conn.commit()
-    conn.close()
-
-    return redirect(url_for('perfil'))
-
-@app.route('/negociacoes')
-def negociacoes():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-
-    user_id = session['user_id']
-    conn = sqlite3.connect('locauscs.db')
-    cursor = conn.cursor()
-
-    cursor.execute('''SELECT carros.modelo, negociacoes.descricao, negociacoes.email_contato, negociacoes.telefone
-                      FROM negociacoes
-                      JOIN carros ON carros.id = negociacoes.carro_id
-                      WHERE carros.usuario_id = ?''', (user_id,))
-    negociacoes = cursor.fetchall()
-    conn.close()
-
-    return render_template('negociacoes.html', negociacoes=negociacoes)
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)

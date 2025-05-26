@@ -4,7 +4,7 @@ import os
 import shutil
 
 # Configuração do banco
-db_path = 'locauscs.db'
+db_path = '../locauscs.db'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
@@ -77,8 +77,8 @@ carros = [
 ]
 
 # Copiar imagens para pasta static/imagens
-if not os.path.exists("static/imagens"):
-    os.makedirs("static/imagens")
+if not os.path.exists("../static/imagens"):
+    os.makedirs("../static/imagens")
 
 for carro in carros:
     imagem_origem = f"imagens_iniciais/{carro['imagem']}"

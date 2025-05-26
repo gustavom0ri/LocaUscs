@@ -20,28 +20,45 @@
     }
 
     .sidebar {
-      width: 220px;
-      background-color: var(--cor-principal);
-      height: 100vh;
-      padding-top: 30px;
-    }
+            width: 250px;
+            background-color: var(--cor-primaria);
+            height: 100vh;
+            padding: 20px;
+            color: var(--cor-terciaria);
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
+        .sidebar .logo h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-    .sidebar ul li a {
-      display: block;
-      padding: 12px 20px;
-      color: white;
-      text-decoration: none;
-      transition: background-color 0.3s;
-    }
+        .sidebar-links {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
 
-    .sidebar ul li a:hover {
-      background-color: #e67e22;
-    }
+        .sidebar-links li {
+            margin: 20px 0;
+        }
+
+        .sidebar-links a {
+            color: var(--cor-terciaria);
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .sidebar-links a:hover {
+            background-color: var(--cor-hover-secundaria);
+        }
 
     .content {
       flex: 1;
@@ -106,15 +123,18 @@
 </head>
 <body>
   <!-- Barra lateral -->
-  <nav class="sidebar">
-    <ul>
-      <li><a href="{{ url_for('home') }}">Página Principal</a></li>
-      <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
-      <li><a href="{{ url_for('registrar_carro') }}">Registrar Carro</a></li>
-      <li><a href="{{ url_for('perfil') }}">Perfil</a></li>
-      <li><a href="{{ url_for('negociacoes') }}">Negociações</a></li>
-    </ul>
-  </nav>
+    <!-- Barra Lateral -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2>LocaUSCS</h2>
+        </div>
+        <ul class="sidebar-links">
+            <li><a href="{{ url_for('perfil') }}">Perfil</a></li>
+            <li><a href="{{ url_for('home') }}">Tela principal</a></li>
+            <li><a href="{{ url_for('meus_carros') }}">Meus Carros</a></li>
+            <li><a href="{{ url_for('negociacoes') }}">Negociações</a></li>
+        </ul>
+    </div>
 
   <!-- Conteúdo Principal -->
   <main class="content">
