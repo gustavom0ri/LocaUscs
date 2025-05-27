@@ -6,6 +6,7 @@ import logging
 import re
 from send_email import email_negociacao_recebida, email_negociacao_criada, email_status_alterado
 from werkzeug.utils import secure_filename
+from corrigir_imagens import corrigir_caminhos_imagens
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -206,6 +207,8 @@ def registrar_carro():
                 (modelo, ano, km, lkm, categoria, caminho_imagem, usuario_id)
             )
             conn.commit()
+            corrigir_caminhos_imagens()
+
         except Exception as e:
             print("Erro ao registrar carro:", e)
         finally:
