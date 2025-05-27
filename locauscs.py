@@ -276,42 +276,29 @@ def negociar(id_carro):
     Mensagem: {mensagem}
     '''.strip()
 
-    # Pegar o modelo do carro para colocar no e-mail
     conn = sqlite3.connect('locauscs.db')
     cursor = conn.cursor()
     cursor.execute('SELECT modelo FROM carros WHERE id = ?', (id_carro,))
     carro = cursor.fetchone()
     modelo_carro = carro[0] if carro else 'Desconhecido'
 
-    # Inserir negociação no banco
     cursor.execute('''
-        INSERT INTO negociacoes (carro_id, descricao, email_contato, telefone)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO negociacoes (carro_id, descricao, email_contato, telefone) VALUES (?, ?, ?, ?)
     ''', (id_carro, descricao, email, telefone))
+
     conn.commit()
     conn.close()
 
-    # Dados para o e-mail
-    dados_email = {
-        'nome': nome,
-        'email': email,
-        'telefone': telefone,
-        'whatsapp': whatsapp,
-        'mensagem': mensagem,
-        'valor_proposto': valor,
-        'duracao': duracao,
-        'local': local,
-        'veiculo': modelo_carro
-    }
+    # Enviar email para dono do carro
+    email_dono = obter_email_dono_carro(id_carro)
+    if email_dono:
+        try:
+            email_negociacao_recebida(email_dono, modelo_carro, nome, duracao, local, valor, whatsapp, mensagem)
+        except Exception as e:
+            print(f"Erro ao enviar email: {e}")
 
-    # Enviar e-mail ao dono do carro
-    email_negociacao_recebida(id_carro, dados_email)
-
-    # Enviar e-mail de confirmação ao locatário
-    email_negociacao_criada(email, dados_email)
-
-    flash("Negociação enviada com sucesso!", "success")
-    return redirect(url_for('home', sucesso=1))
+    flash('Negociação enviada com sucesso!', 'success')
+    return redirect(url_for('home'))
 
 
 
