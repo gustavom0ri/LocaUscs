@@ -11,4 +11,4 @@ def listar_tabelas(db_path):
     conn.close()
 
 if __name__ == "__main__":
-    listar_tabelas("locauscs.db")
+    listar_tabelas("../locauscs.db")

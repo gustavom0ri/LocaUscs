@@ -2,7 +2,7 @@ import sqlite3
 import re
 
 # Conexão com o banco
-conn = sqlite3.connect("locauscs.db")  # substitua pelo nome do seu banco
+conn = sqlite3.connect("../locauscs.db")  # substitua pelo nome do seu banco
 cursor = conn.cursor()
 
 # Função para extrair os dados da descrição

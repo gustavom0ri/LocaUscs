@@ -208,7 +208,12 @@
         <div class="carros-container-horizontal">
             {% for carro in meus_carros %}
                 <div class="carro">
-                    <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                    {% if carro[6] %}
+                        <img src="{{ url_for('static', filename='imagens/' + carro[6]) }}" alt="Imagem do carro" />
+                    {% else %}
+                        <img src="{{ url_for('static', filename='imagens/default.jpg') }}" alt="Sem imagem disponível" />
+                    {% endif %}
+
                     <h3>{{ carro[1] }}</h3>
                     <p><strong>Ano:</strong> {{ carro[2] }}</p>
                     <p><strong>KM:</strong> {{ carro[3] }}</p>

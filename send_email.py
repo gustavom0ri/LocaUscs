@@ -3,7 +3,9 @@ import os
 from email.message import EmailMessage
 from email.utils import make_msgid
 
-# Configurações do servidor SMTP
+# Configurações do servidor SMTP, usa o Email do Gustavo
+# e para a senha não estar disponivel colocamos uma variavel de ambiente no Notebook e o Python pega de lá
+
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 USERNAME = "gustavomori382@gmail.com"
@@ -13,6 +15,7 @@ PASSWORD = os.getenv("PASSWORD")
 LOGO_PATH = r"C:\Users\gusta\PycharmProjects\LocaUscs\static\artes_visuais\locauscs_logo.png"
 PATTERN_PATH = r"C:\Users\gusta\PycharmProjects\LocaUscs\static\artes_visuais\pattern-1.png"
 
+# a função que envia o Email, colocamos varios logs que printam no console em que ponto do Emai esta para facilitar a correção de BUGS
 def enviar_email(destinatario, assunto, corpo_html):
     print(f"[LOG] Preparando para enviar email para {destinatario} com assunto '{assunto}'")
 
@@ -106,6 +109,7 @@ def enviar_email(destinatario, assunto, corpo_html):
     with open(PATTERN_PATH, 'rb') as img:
         msg.get_payload()[0].add_related(img.read(), 'image', 'png', cid=pattern_cid)
 
+    #para garantir que o Email foi enviado
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as smtp:
             smtp.starttls()
@@ -115,6 +119,7 @@ def enviar_email(destinatario, assunto, corpo_html):
     except Exception as e:
         print(f"[ERRO] Falha ao enviar email para {destinatario}: {e}")
 
+#função que envia o Email para o dono do carro, tambem contem logs para facilitar a correção de Erros
 def email_negociacao_recebida(carro_id, dados):
     print(f"[LOG] email_negociacao_recebida chamado para carro_id={carro_id} com dados={dados}")
     assunto = f"Nova negociação para seu veículo {dados.get('veiculo', '')}"
@@ -146,6 +151,7 @@ def email_negociacao_recebida(carro_id, dados):
     else:
         print(f"[ERRO] Email do dono do carro não encontrado para carro_id={carro_id}")
 
+#função que envia o Email para o Criador da negociação, tambem contem logs para facilitar a correção de Erros
 def email_negociacao_criada(email_locatario, dados):
     print(f"[LOG] email_negociacao_criada chamado para email_locatario={email_locatario} com dados={dados}")
     assunto = f"Confirmação de negociação para {dados.get('veiculo', '')}"
@@ -160,6 +166,7 @@ def email_negociacao_criada(email_locatario, dados):
     """
     enviar_email(email_locatario, assunto, corpo_html)
 
+#função que envia o Email quando há alguma alteração de status, tambem contem logs para facilitar a correção de Erros, ainda não foi implementado nessa versão do Codigo
 def email_status_alterado(email_locatario, dados):
     print(f"[LOG] email_status_alterado chamado para email_locatario={email_locatario} com dados={dados}")
     assunto = f"Status da negociação atualizado para {dados.get('veiculo', '')}"

@@ -5,6 +5,7 @@ import os
 import logging
 import re
 from send_email import email_negociacao_recebida, email_negociacao_criada, email_status_alterado
+from werkzeug.utils import secure_filename
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -168,30 +169,51 @@ def obter_email_dono_carro(id_carro):
     return None
 
 
+
+
 @app.route('/registrar_carro', methods=['GET', 'POST'])
 def registrar_carro():
+    # Verifica se o usuário está logado
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        modelo = request.form['modelo']
-        ano = request.form['ano']
-        km = request.form['km']
-        lkm = request.form['lkm']
-        categoria = request.form['categoria']
-        imagem = request.form['imagem']
+        # Coleta os dados do formulário
+        modelo = request.form.get('modelo')
+        ano = request.form.get('ano')
+        km = request.form.get('km')         # Quilometragem total
+        lkm = request.form.get('lkm')       # Litros por km
+        categoria = request.form.get('categoria')
+        imagem_file = request.files.get('imagem')
         usuario_id = session['user_id']
 
-        conn = sqlite3.connect('locauscs.db')
-        cursor = conn.cursor()
-        cursor.execute('''INSERT INTO carros (modelo, ano, km, lkm, categoria, imagem, usuario_id)
-                          VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                       (modelo, ano, km, lkm, categoria, imagem, usuario_id))
-        conn.commit()
-        conn.close()
+        # Caminho da imagem
+        caminho_imagem = None
+        if imagem_file and imagem_file.filename != '':
+            filename = secure_filename(imagem_file.filename)
+            pasta_imagens = os.path.join('static', 'imagens')
+            os.makedirs(pasta_imagens, exist_ok=True)  # Garante que a pasta existe
+            caminho_imagem = os.path.join(pasta_imagens, filename)
+            imagem_file.save(caminho_imagem)
+
+        try:
+            # Inserção no banco de dados
+            conn = sqlite3.connect('locauscs.db')
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO carros (modelo, ano, km, lkm, categoria, imagem, usuario_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                (modelo, ano, km, lkm, categoria, caminho_imagem, usuario_id)
+            )
+            conn.commit()
+        except Exception as e:
+            print("Erro ao registrar carro:", e)
+        finally:
+            conn.close()
 
         return redirect(url_for('meus_carros'))
 
+    # Caso seja um GET
     return render_template('registrar_carro.html')
 
 @app.route('/meus_carros')
@@ -429,5 +451,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8080))  # Pega a porta da variável PORT, padrão 8080
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
