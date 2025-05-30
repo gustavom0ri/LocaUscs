@@ -12,12 +12,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expõe a porta que a aplicação Flask usará
-EXPOSE 5000
+EXPOSE 8080
 
-# Define variáveis de ambiente para o Flask
+# Define a variável de ambiente para o Flask
 ENV FLASK_APP=locauscs.py
 ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=5000
 
 # Comando para iniciar a aplicação
 CMD ["flask", "run"]
